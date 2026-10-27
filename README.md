@@ -26,9 +26,11 @@ Last verified on **2026-10-27** on Windows 11, Node 24.19.0, JDK 17, Android SDK
 | Android debug APK | ✅ Builds | `:app:assembleDebug`, 67,155,446 bytes |
 | Android release APK | ✅ Builds with R8, **unsigned** | `:app:assembleRelease`, 47,461,328 bytes |
 | APK SHA-256 (debug) | `45B35AC8AC2400623011077202F3DA0A913A1F20BF07AE7634A0AE16500356AE` | `Get-FileHash` |
-| Live DB + API + two phones | ⏳ Not run here | No PostgreSQL/Docker/device in the build environment |
+| Live DB + API + web | ✅ Pass | PostgreSQL 16.15 + seed + `GET /health` (`database: ok`) + dashboard renders seeded device and alerts |
+| Live command round-trip | ✅ Pass | Ring → `PENDING` → device poll → `DELIVERED` → device ack → `ACKNOWLEDGED` |
+| Two-phone runtime | ⏳ Not run here | No physical Android device in the build environment |
 
-The APK was **compiled and packaged**, not installed on a physical phone in this environment. See [docs/TESTING.md](docs/TESTING.md) for the exact commands, the manual two-phone test script, and what still needs a real device.
+The APK was **compiled and packaged**, not installed on a physical phone in this environment. The API, PostgreSQL database and web dashboard were run end-to-end locally, including an owner→device→owner command round-trip. The live `prisma db push` also caught a real schema bug (`PairingRequest.deviceId` missing `@db.Uuid`, incompatible with `Device.id`), now fixed. See [docs/TESTING.md](docs/TESTING.md) for the exact commands, the manual two-phone test script, and what still needs a real device.
 
 ---
 
@@ -159,6 +161,8 @@ Demo credentials created by the seed:
 ## First real test with two phones
 
 You need two Android phones (or one phone + the web dashboard) and one computer running the backend on the same Wi-Fi.
+
+> The backend, database and dashboard have already been exercised together locally, including a full command round-trip (owner → device poll → ack). Only the phone-side steps below still need real hardware.
 
 1. Start PostgreSQL, the backend and the dashboard on the computer.
 2. Find the computer's LAN address: `ipconfig` → IPv4, e.g. `192.168.1.20`. Allow inbound TCP 4000 in the firewall.

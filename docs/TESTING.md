@@ -26,12 +26,12 @@ Snapshot: **2026-10-27**. This page records exactly what was executed, what pass
 | Android SDK | Platform 35, Build-Tools 35.0.0, Platform-Tools |
 | Gradle | 8.14.3 (wrapper) |
 | AGP / Kotlin | 8.7.3 / 2.0.21 |
-| PostgreSQL | **not installed / not running** |
-| Docker | **not installed** |
+| PostgreSQL | **16.15**, service `postgresql-x64-16` (running), database `laqeeni` |
+| Docker | **not installed** (local PostgreSQL used instead of Compose) |
 | Physical Android device | **none** |
 | Firebase / SMTP / Google OAuth | **not configured** |
 
-Because PostgreSQL and Docker were unavailable, the automated backend tests use an in-memory Prisma stub, and no live HTTP/database integration test was possible. This is called out again under [Not verified here](#not-verified-here-and-why).
+The automated backend unit/E2E suites use an in-memory Prisma stub, so they run without a database. A **live** pass against the real local PostgreSQL 16.15 instance was run separately (see [Live stack](#live-stack-postgresql--api--web)); only the two-phone runtime checks still need hardware. Remaining gaps are listed under [Not verified here](#not-verified-here-and-why).
 
 ---
 
@@ -55,6 +55,12 @@ Because PostgreSQL and Docker were unavailable, the automated backend tests use 
 | Release APK identity | `aapt2 dump badging` | ✅ `com.abdullah.laqeeni`, v1.0.0, min 26, target 35 | ~2 s |
 | Android string keys | `node check-strings.cjs` | ✅ 209 used / 240 defined, 0 missing EN/AR/FR | <1 s |
 | XML well-formedness | PowerShell `XmlDocument.Load` | ✅ manifest + 5 XML configs | <1 s |
+| Live PostgreSQL schema | `npx.cmd prisma db push` | ✅ in sync (after `PairingRequest.deviceId @db.Uuid` fix) | ~3 s |
+| Live seed | `npm.cmd run seed` | ✅ demo owner + device + pairing code | ~4 s |
+| Live API boot | `node dist/main.js` → `GET /health` | ✅ `{status:ok, database:ok, push:"polling-only"}` | ~5 s |
+| Live web render | `npm.cmd run start` → `/login`, `/dashboard` | ✅ 200, seeded device + alerts, 0 console errors | ~10 s |
+| Live command round-trip | owner `POST /devices/:id/ring` → device poll → device `ack` | ✅ `PENDING` → `DELIVERED` → `ACKNOWLEDGED` | <1 s |
+| Public HTTPS tunnel | Cloudflare quick tunnel → `https://…trycloudflare.com` | ✅ login + dashboard render over HTTPS | ~10 s |
 
 > On PowerShell 5.1, `npm.cmd test 2>&1` reports `Exited with code 1` for Jest's stderr banner even when all tests pass. The Jest summary (`Tests: 8 passed`) and `$LASTEXITCODE` of the underlying process are the source of truth. The table reflects the Jest results.
 
@@ -142,7 +148,7 @@ npm.cmd audit --omit=dev
 
 The build was run with Next.js **16.4.3**, React **19.3.1**, MapLibre **6.16.0**. The application uses async `cookies()`, `params` and `searchParams`, and `middleware.ts` is named `proxy.ts` with `export async function proxy(...)` per Next 16 conventions.
 
-Dashboard pages are server-rendered against the API. Without a running API/database they cannot render authenticated data, so the production build only proves compilation/routing, not live data.
+Dashboard pages are server-rendered against the API. The production build proves compilation/routing; live authenticated rendering was verified separately against the running API and PostgreSQL (see [Live stack](#live-stack-postgresql--api--web)).
 
 ---
 
@@ -279,18 +285,57 @@ Record device models and Android versions when you run this; OEM behaviour (Xiao
 
 ---
 
+## Live stack: PostgreSQL + API + web
+
+Run on the same Windows 11 host with the local PostgreSQL 16.15 service (`postgresql-x64-16`) instead of Docker.
+
+```powershell
+# database + role (superuser postgres / postgres)
+& 'C:\Program Files\PostgreSQL\16\bin\psql.exe' -U postgres -h localhost -c "CREATE ROLE laqeeni LOGIN PASSWORD '…'"
+& 'C:\Program Files\PostgreSQL\16\bin\psql.exe' -U postgres -h localhost -c "CREATE DATABASE laqeeni OWNER laqeeni"
+
+# backend
+cd backend
+npx.cmd prisma db push          # see schema note below
+npm.cmd run seed
+node dist/main.js               # http://127.0.0.1:4000
+
+# web (production build)
+cd ..\web
+$env:API_INTERNAL_URL='http://127.0.0.1:4000'; $env:NODE_ENV='production'
+npm.cmd run start               # http://127.0.0.1:3000
+```
+
+Observed results:
+
+| Step | Result |
+| --- | --- |
+| `GET /health` | `{ "status": "ok", "database": "ok", "push": "polling-only" }` |
+| `POST /auth/login` (demo owner) | `200`, access token issued, `emailVerified: true` |
+| Web `/dashboard` | Renders the seeded device, coordinates, battery and 2–3 notifications; no browser console errors |
+| Owner `POST /devices/:id/ring` | Command created `PENDING` with payload `{flash, sound:"alarm", vibration, durationSeconds}` |
+| Device `GET /device/commands/pending` | Returns `{ commands: [...], serverTime, lostMode }`; command flips to `DELIVERED` |
+| Device `POST /device/commands/:id/ack` | Body `{"status":"SUCCESS"}` → `{ ok: true }`; owner list shows `ACKNOWLEDGED` + `acknowledgedAt` |
+| Public HTTPS tunnel | Cloudflare quick tunnel serving the same login + dashboard over HTTPS |
+
+Notes:
+
+- The ack DTO accepts `status: "SUCCESS" | "FAILED"` only (no `result` field); unknown properties are rejected by the global whitelist pipe.
+- `GET /device/commands/pending` returns a wrapper object, not a bare array, and only `PENDING` commands — a polled command must be acknowledged before its status is final.
+- **Schema fix found by the live push:** `PairingRequest.deviceId` was `String? @unique` while `Device.id` is `@db.Uuid`, so `prisma db push` failed with `foreign key constraint "PairingRequest_deviceId_fkey" cannot be implemented` (text vs uuid). Added `@db.Uuid`; the push then succeeded and Prisma Client was regenerated. `prisma validate` alone does not catch this class of error.
+
+---
+
 ## Not verified here (and why)
 
 | Missing verification | Blocker | How to close it |
 | --- | --- | --- |
-| Live backend ↔ PostgreSQL CRUD | No PostgreSQL/Docker | Run `docker compose up -d db`, `prisma db push`, start API, execute the curl flow |
-| Seed execution | Same | `npm run seed` then sign in as demo |
-| Real pairing/command round-trip | Same + phone | Follow SETUP §7 |
+| Two-phone pairing + real alarm/locate on hardware | No device/emulator | Follow SETUP §7 with two phones |
 | APK install/runtime | No device/emulator | `adb install`, grant permissions, run scenarios 6–14 |
 | FCM delivery | No Firebase project | Follow SETUP §8 |
 | Google sign-in | No OAuth client | Create a web client, set `GOOGLE_CLIENT_ID` + `NEXT_PUBLIC_GOOGLE_CLIENT_ID` |
 | Verification/reset e-mail | No SMTP | Configure SMTP and test the links |
-| Production TLS/proxy | No domain | Deploy behind Caddy/nginx, set HTTPS URLs |
+| Permanent hosting / TLS | No domain or host account | Deploy API + web + managed Postgres, set HTTPS URLs (the tunnel used for the demo is temporary) |
 | Load/performance | Single-process local only | k6/artillery against the polling endpoints |
 | Accessibility audit | Not run | TalkBack + axe-core; RTL checks on a device |
 | Push/notification permission edge cases | Android 13/14 device | Manual matrix on API 26, 33, 34, 35 |
