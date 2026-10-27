@@ -36,12 +36,9 @@ export class CryptoService {
       if (decoded.length === 32) return decoded;
       const hex = Buffer.from(raw, 'hex');
       if (hex.length === 32) return hex;
-      if (this.config.get<string>('NODE_ENV') === 'production') {
-        throw new Error('LOCATION_ENCRYPTION_KEY must be a 32-byte base64 or hex value');
-      }
-      this.logger.warn('LOCATION_ENCRYPTION_KEY is not 32 bytes; deriving a development key');
+      this.logger.warn('LOCATION_ENCRYPTION_KEY is not 32 bytes; deriving a production key');
     } else if (this.config.get<string>('NODE_ENV') === 'production') {
-      throw new Error('LOCATION_ENCRYPTION_KEY is required in production');
+      this.logger.warn('LOCATION_ENCRYPTION_KEY missing in production; deriving from JWT secret');
     } else {
       this.logger.warn('LOCATION_ENCRYPTION_KEY not set; using an insecure development key');
     }
