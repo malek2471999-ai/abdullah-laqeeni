@@ -3,18 +3,18 @@
 > **Ø¶Ø§Ø¹ Ù‡Ø§ØªÙÙƒØŸ Ø¹Ø¨Ø¯Ø§Ù„Ù„Ù‡ Ù„Ø§Ù‚ÙŠÙ†ÙŠ!**
 > *Lost your phone? Abdullah Laqeeni!*
 
-## â–¶ [Ø§ÙØªØ­ Ø§Ù„Ø¨Ø±Ù†Ø§Ù…Ø¬ Ù…Ø¨Ø§Ø´Ø±Ø© Â· Open the live app](https://bottles-belief-maintained-mechanism.trycloudflare.com)
+## ▶ [افتح البرنامج مباشرة · Open the live app](https://abdullah-laqeeni-web.onrender.com)
 
 | | |
 | --- | --- |
-| **Live dashboard (direct)** | <https://bottles-belief-maintained-mechanism.trycloudflare.com> |
-| **GitHub entry point (stable)** | <https://malek2471999-ai.github.io/abdullah-laqeeni-live/> |
-| **Your real account** | Ø®Ù„ÙŠ â† malek2471999@gmail.com / ÙƒÙ„Ù…Ø© `Lqeeni!R3al#User` (ØºÙŠÙ‘Ø±Ù‡Ø§ Ù…Ù† Security Ø§Ù„Ø¢Ù†) |
-| **Android APK** | [Releases â†’ v1.0.0](https://github.com/malek2471999-ai/abdullah-laqeeni/releases/tag/v1.0.0) |
+| **Live dashboard (production)** | <https://abdullah-laqeeni-web.onrender.com> |
+| **GitHub entry point (always stable)** | <https://malek2471999-ai.github.io/abdullah-laqeeni-live/> |
+| **Your real account** | `malek2471999@gmail.com` / `Lqeeni!R3al#User` (غيّرها من Security الآن) |
+| **Android APK** | [Releases → v1.0.0](https://github.com/malek2471999-ai/abdullah-laqeeni/releases/tag/v1.0.0) |
 
-> **الحساب real**: malek2471999@gmail.com / Lqeeni!R3al#User (غيّرها من Security الآن)
+> ✅ **Program now on permanent hosting**: Render (API + Web) + Neon (PostgreSQL). GitHub Pages entry forwards to it.
 >
-> ⚠️ تجربة على PC: tunnel هذه مرآة لحسابك (لا demo). Link يبقى 24/7 pending ما دام this computer runs. See [Permanent hosting](#permanent-hosting).
+> Free-tier limits apply (Render س750 hours/month for 1 always-on service). Vercel not used.
 
 A complete, self-hosted phone-recovery system: an Android app for the phone you want to protect, a NestJS + PostgreSQL backend, and a Next.js dashboard that works from any browser. Link your own phones in advance, then locate, ring, flash, message and put a lost phone into Lost Mode when it goes missing.
 
