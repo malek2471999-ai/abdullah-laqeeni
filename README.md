@@ -8,6 +8,7 @@
 | | |
 | --- | --- |
 | **Live dashboard** | <https://punk-leasing-cutting-opening.trycloudflare.com> |
+| **GitHub link that opens the app** | <https://malek2471999-ai.github.io/abdullah-laqeeni-live/> |
 | **Demo login** | `demo@laqeeni.app` / `Laqeeni#2026` |
 | **Android APK** | [Releases → v1.0.0](https://github.com/malek2471999-ai/abdullah-laqeeni/releases/tag/v1.0.0) |
 
