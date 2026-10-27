@@ -3,6 +3,18 @@
 > **ضاع هاتفك؟ عبدالله لاقيني!**
 > *Lost your phone? Abdullah Laqeeni!*
 
+## ▶ [افتح البرنامج مباشرة · Open the live app](https://punk-leasing-cutting-opening.trycloudflare.com)
+
+| | |
+| --- | --- |
+| **Live dashboard** | <https://punk-leasing-cutting-opening.trycloudflare.com> |
+| **Demo login** | `demo@laqeeni.app` / `Laqeeni#2026` |
+| **Android APK** | [Releases → v1.0.0](https://github.com/malek2471999-ai/abdullah-laqeeni/releases/tag/v1.0.0) |
+
+> The demo account is public. Change its password (Settings → Security) before storing anything real.
+>
+> The live link is a temporary Cloudflare tunnel to a real PostgreSQL + NestJS + Next.js stack running on my machine. It works while that machine and the tunnel process are running. GitHub can only host source code — it cannot execute a Next.js/PostgreSQL app — so this link, not the repository page, is the running program. See [Permanent hosting](#permanent-hosting).
+
 A complete, self-hosted phone-recovery system: an Android app for the phone you want to protect, a NestJS + PostgreSQL backend, and a Next.js dashboard that works from any browser. Link your own phones in advance, then locate, ring, flash, message and put a lost phone into Lost Mode when it goes missing.
 
 This repository is a working monorepo, not a design mock-up. Every screen and button is wired to a real API endpoint and a real database, except where a platform restriction is called out explicitly (see [Known limitations](#known-limitations)).
@@ -233,6 +245,20 @@ These are real platform/design limits, documented instead of faked:
 8. **Maps use public OpenStreetMap tiles** by default. That is fine for development and light personal use; production should use a paid tile provider and respect its usage policy.
 9. **Not tested on a physical device in this environment.** The APK was built and its contents verified, but runtime behaviour (permissions dialogs, OEM quirks) still needs your two phones.
 10. **Backend ships with 13 audit advisories** in transitive/direct dependencies whose fixes require major upgrades (Nest 12, nodemailer 10, schedule 12). Exposure and the upgrade plan are documented in [docs/SECURITY.md](docs/SECURITY.md#dependency-audit). The web app is clean.
+
+---
+
+## Permanent hosting
+
+The demo link above is a **Cloudflare quick tunnel**. It is free and needs no account, but it dies when the tunnel process or the computer stops, and its hostname changes on every restart. For a URL that stays up:
+
+1. **Database** — managed PostgreSQL (Railway, Neon, Supabase, Render).
+2. **API** — deploy `backend/` (Dockerfile included) with `DATABASE_URL`, the JWT secrets, `TOKEN_PEPPER`, `LOCATION_ENCRYPTION_KEY`, `CORS_ORIGINS` and `WEB_PUBLIC_URL` pointing at your HTTPS web origin; run `prisma migrate deploy` (or `db push` for a first setup).
+3. **Web** — deploy `web/` to Vercel/Netlify or the included Dockerfile, with `API_INTERNAL_URL` set to the API's public HTTPS URL at build **and** run time (`NEXT_PUBLIC_SITE_URL` is baked at build).
+4. **Android** — set the server address to the API HTTPS URL; release builds reject plain `http://`.
+5. Set the repository homepage (Settings → About → Website) to the new URL so visitors land on the app, not the code.
+
+Full checklist: [docs/SETUP.md](docs/SETUP.md) and [docs/SECURITY.md](docs/SECURITY.md).
 
 ---
 
