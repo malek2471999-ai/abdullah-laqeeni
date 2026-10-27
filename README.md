@@ -38,7 +38,7 @@ Last verified on **2026-10-27** on Windows 11, Node 24.19.0, JDK 17, Android SDK
 | Web dependency audit | âœ… 0 vulnerabilities | `npm audit --omit=dev` |
 | Android debug APK | âœ… Builds | `:app:assembleDebug`, 67,155,446 bytes |
 | Android release APK | âœ… Builds with R8, **unsigned** | `:app:assembleRelease`, 47,461,328 bytes |
-| APK SHA-256 (debug) | `45B35AC8AC2400623011077202F3DA0A913A1F20BF07AE7634A0AE16500356AE` | `Get-FileHash` |
+| APK SHA-256 (debug) | `D9000D7A459BBF27B1092CAA973651E147D06F38DD0554EC6FED64F3950BF2E6` | `Get-FileHash` |
 | Live DB + API + web | âœ… Pass | PostgreSQL 16.15 + seed + `GET /health` (`database: ok`) + dashboard renders seeded device and alerts |
 | Live command round-trip | âœ… Pass | Ring â†’ `PENDING` â†’ device poll â†’ `DELIVERED` â†’ device ack â†’ `ACKNOWLEDGED` |
 | Two-phone runtime | â³ Not run here | No physical Android device in the build environment |

@@ -173,7 +173,7 @@ Artifact:
 | --- | --- |
 | Path | `android/app/build/outputs/apk/debug/app-debug.apk` |
 | Size | 67,155,446 bytes (~64.0 MiB) |
-| SHA-256 | `45B35AC8AC2400623011077202F3DA0A913A1F20BF07AE7634A0AE16500356AE` |
+| SHA-256 | `D9000D7A459BBF27B1092CAA973651E147D06F38DD0554EC6FED64F3950BF2E6` |
 | Package | `com.abdullah.laqeeni.debug` |
 | Version | `1.0.0-debug` (versionCode 1) |
 | minSdk / targetSdk | 26 / 35 |
@@ -193,7 +193,7 @@ Artifact:
 | --- | --- |
 | Path | `android/app/build/outputs/apk/release/app-release-unsigned.apk` |
 | Size | 47,461,328 bytes (~45.3 MiB) |
-| SHA-256 | `83C2797B9B0060F26CC135A117E77119D7C679FB5B87099250FC4745C8424973` |
+| SHA-256 | `3932600C448C57E1D3BC768BA56E581626472F300CEBFAC06B9CFC75EF389902` |
 | Package | `com.abdullah.laqeeni` |
 | Version | `1.0.0` |
 | Status | **Unsigned** — sign with your own keystore before installing/distributing |
