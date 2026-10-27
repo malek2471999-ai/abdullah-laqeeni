@@ -1,0 +1,35 @@
+{
+  "name": "@laqeeni/web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Abdullah Laqeeni recovery dashboard",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "node scripts/check-i18n.mjs",
+    "check:i18n": "node scripts/check-i18n.mjs",
+    "typecheck": "tsc --noEmit",
+    "verify": "npm run check:i18n && npm run typecheck"
+  },
+  "dependencies": {
+    "clsx": "2.1.1",
+    "lucide-react": "0.468.0",
+    "maplibre-gl": "6.16.0",
+    "next": "16.4.3",
+    "qrcode": "1.5.4",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "tailwind-merge": "2.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "@types/qrcode": "1.5.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "autoprefixer": "10.4.20",
+    "postcss": "8.4.49",
+    "tailwindcss": "3.4.17",
+    "typescript": "5.7.2"
+  }
+}

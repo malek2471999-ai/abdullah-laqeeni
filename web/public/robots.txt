@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /dashboard
+Disallow: /devices
+Disallow: /notifications
+Disallow: /security
+Disallow: /settings
+Disallow: /pair
+Disallow: /api/
+Allow: /
+
+Sitemap: /sitemap.xml

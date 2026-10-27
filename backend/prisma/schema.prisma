@@ -1,0 +1,290 @@
+// Abdullah Laqeeni — data model
+// PostgreSQL 14+. All location coordinates are encrypted at rest (AES-256-GCM).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CommandType {
+  RING
+  STOP_RING
+  LOCATE
+  LOST_MODE_ON
+  LOST_MODE_OFF
+  MESSAGE
+  VIBRATE
+  FLASH
+  REQUEST_STATUS
+}
+
+enum CommandStatus {
+  PENDING
+  DELIVERED
+  ACKNOWLEDGED
+  FAILED
+  EXPIRED
+  CANCELLED
+}
+
+enum NotificationType {
+  DEVICE_ONLINE
+  DEVICE_OFFLINE
+  COMMAND_ACK
+  LOCATION_UPDATE
+  LOST_MODE
+  BATTERY_LOW
+  SECURITY
+}
+
+enum SecurityEventType {
+  LOGIN_SUCCESS
+  LOGIN_FAILED
+  REGISTER
+  PASSWORD_RESET
+  PASSWORD_CHANGED
+  LOGOUT_ALL
+  DEVICE_PAIRED
+  DEVICE_UNPAIRED
+  COMMAND_SENT
+  TWO_FACTOR_ENABLED
+  TWO_FACTOR_DISABLED
+}
+
+enum PairingStatus {
+  PENDING
+  CONSUMED
+  EXPIRED
+  CANCELLED
+}
+
+enum EmailTokenType {
+  VERIFY_EMAIL
+  RESET_PASSWORD
+}
+
+model User {
+  id                String          @id @default(uuid()) @db.Uuid
+  email             String          @unique
+  name              String
+  passwordHash      String?
+  emailVerifiedAt   DateTime?
+  googleId          String?         @unique
+  twoFactorEnabled  Boolean         @default(false)
+  twoFactorSecret   String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  deletedAt         DateTime?
+
+  sessions      Session[]
+  devices       Device[]
+  pairings      PairingRequest[]
+  notifications Notification[]
+  security      SecurityEvent[]
+  emailTokens   EmailToken[]
+}
+
+model Session {
+  id               String    @id @default(uuid()) @db.Uuid
+  userId           String    @db.Uuid
+  refreshTokenHash String    @unique
+  userAgent        String?
+  ip               String?
+  createdAt        DateTime  @default(now())
+  lastUsedAt       DateTime  @default(now())
+  expiresAt        DateTime
+  revokedAt        DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+}
+
+model Device {
+  id                    String    @id @default(uuid()) @db.Uuid
+  userId                String    @db.Uuid
+  name                  String
+  manufacturer          String
+  model                 String
+  androidVersion        String
+  appVersion            String?
+  tokenHash             String    @unique
+  tokenPrefix           String
+  fcmToken              String?
+  locationHistoryEnabled Boolean  @default(false)
+  historyRetentionDays  Int       @default(30)
+  lostMode              Boolean   @default(false)
+  lostMessage           String?
+  contactPhone          String?
+  notifyOnReconnect     Boolean   @default(true)
+  lastSeenAt            DateTime?
+  pairedAt              DateTime  @default(now())
+  revokedAt             DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  location      DeviceLocation?
+  status        DeviceStatus?
+  commands      RemoteCommand[]
+  history       LocationHistory[]
+  notifications Notification[]
+  pairing       PairingRequest?
+  acks          CommandAcknowledgement[]
+
+  @@index([userId, revokedAt])
+  @@index([lastSeenAt])
+}
+
+model PairingRequest {
+  id         String        @id @default(uuid()) @db.Uuid
+  userId     String        @db.Uuid
+  codeHash   String        @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  status     PairingStatus @default(PENDING)
+  deviceId   String?       @unique
+  createdAt  DateTime      @default(now())
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device Device? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status, expiresAt])
+}
+
+model DeviceLocation {
+  id              String   @id @default(uuid()) @db.Uuid
+  deviceId        String   @unique @db.Uuid
+  latitudeEnc     String
+  longitudeEnc    String
+  accuracyMeters  Float?
+  altitudeMeters  Float?
+  speedMps        Float?
+  headingDegrees  Float?
+  source          String   @default("gps")
+  isMock          Boolean  @default(false)
+  capturedAt      DateTime
+  recordedAt      DateTime @default(now())
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([capturedAt])
+}
+
+model LocationHistory {
+  id             String   @id @default(uuid()) @db.Uuid
+  deviceId       String   @db.Uuid
+  latitudeEnc    String
+  longitudeEnc   String
+  accuracyMeters Float?
+  isMock         Boolean  @default(false)
+  capturedAt     DateTime
+  createdAt      DateTime @default(now())
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId, capturedAt])
+}
+
+model DeviceStatus {
+  deviceId          String   @id @db.Uuid
+  batteryLevel      Int?
+  charging          Boolean?
+  networkConnected  Boolean?
+  networkType       String?
+  lastLocationAt    DateTime?
+  lastSyncAt        DateTime?
+  appVersion        String?
+  updatedAt         DateTime @updatedAt
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+}
+
+model RemoteCommand {
+  id              String        @id @default(uuid()) @db.Uuid
+  deviceId        String        @db.Uuid
+  type            CommandType
+  payload         Json          @default("{}")
+  status          CommandStatus @default(PENDING)
+  idempotencyKey  String
+  expiresAt       DateTime
+  deliveredAt     DateTime?
+  acknowledgedAt  DateTime?
+  result          Json?
+  failureReason   String?
+  createdAt       DateTime      @default(now())
+
+  device Device                 @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  ack    CommandAcknowledgement?
+
+  @@unique([deviceId, idempotencyKey])
+  @@index([deviceId, status, expiresAt])
+  @@index([createdAt])
+}
+
+model CommandAcknowledgement {
+  id        String   @id @default(uuid()) @db.Uuid
+  commandId String   @unique @db.Uuid
+  deviceId  String   @db.Uuid
+  status    String
+  message   String?
+  result    Json?
+  createdAt DateTime @default(now())
+
+  command RemoteCommand @relation(fields: [commandId], references: [id], onDelete: Cascade)
+  device  Device        @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId, createdAt])
+}
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @db.Uuid
+  deviceId  String?          @db.Uuid
+  type      NotificationType
+  title     String
+  body      String
+  data      Json?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device Device? @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+}
+
+model SecurityEvent {
+  id        String            @id @default(uuid()) @db.Uuid
+  userId    String?           @db.Uuid
+  email     String?
+  type      SecurityEventType
+  ip        String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime          @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([type, createdAt])
+}
+
+model EmailToken {
+  id         String         @id @default(uuid()) @db.Uuid
+  userId     String         @db.Uuid
+  tokenHash  String         @unique
+  type       EmailTokenType
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime       @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type, expiresAt])
+}

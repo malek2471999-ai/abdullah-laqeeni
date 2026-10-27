@@ -1,0 +1,15 @@
+node_modules
+.corrupt_node_modules
+dist
+coverage
+test
+.env
+.env.*
+*.log
+*.bak
+.git
+.gitignore
+.vscode
+.idea
+Dockerfile
+.dockerignore

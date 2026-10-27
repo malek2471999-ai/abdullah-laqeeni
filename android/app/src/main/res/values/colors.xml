@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="navy">#071426</color>
+    <color name="electric_blue">#087CFF</color>
+    <color name="emerald">#00D69A</color>
+    <color name="alert_red">#FF4655</color>
+    <color name="purple">#8957FF</color>
+    <color name="white">#FFFFFF</color>
+</resources>
