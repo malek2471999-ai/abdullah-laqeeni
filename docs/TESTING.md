@@ -9,6 +9,7 @@ Snapshot: **2026-10-27**. This page records exactly what was executed, what pass
 - [Android](#android)
 - [Static checks](#static-checks)
 - [Bugs found and fixed during verification](#bugs-found-and-fixed-during-verification)
+- [Live stack: PostgreSQL + API + web](#live-stack-postgresql--api--web)
 - [Manual two-phone acceptance test](#manual-two-phone-acceptance-test)
 - [Not verified here (and why)](#not-verified-here-and-why)
 - [Reproduce the whole verification](#reproduce-the-whole-verification)
